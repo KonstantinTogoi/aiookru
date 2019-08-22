@@ -1,7 +1,9 @@
 import aiohttp
 import logging
+from hashlib import md5
 
 from .exceptions import Error, APIError
+from .utils import SignatureCircuit
 
 
 log = logging.getLogger(__name__)
@@ -35,7 +37,7 @@ class Session:
 class PublicSession(Session):
     """Session for calling public API methods of OK API."""
 
-    PUBLIC_URL = 'https://api.ok.ru/fb.do'
+    API_URL = 'https://api.ok.ru/fb.do'
     CONTENT_TYPE = 'application/json;charset=utf-8'
 
     async def public_request(self, segments=(), params=None):
@@ -51,7 +53,7 @@ class PublicSession(Session):
         """
 
         segments = f'/{"/".join(segments)}' if segments else ''
-        url = f'{self.PUBLIC_URL}{segments}'
+        url = f'{self.API_URL}{segments}'
 
         try:
             async with self.session.get(url, params=params) as resp:
@@ -70,3 +72,96 @@ class PublicSession(Session):
             response = content
 
         return response
+
+
+class TokenSession(PublicSession):
+    """Session for sending authorized requests."""
+
+    ERROR_MSG = 'See calculating signature at https://apiok.ru/dev/methods/.'
+
+    __slots__ = ('app_key', 'app_secret_key', 'access_token',
+                 'session_secret_key', 'format')
+
+    def __init__(self, app_key, app_secret_key='', access_token='',
+                 session_secret_key='', format='json',
+                 pass_error=False, session=None):
+        super().__init__(pass_error, session)
+        self.app_key = app_key
+        self.app_secret_key = app_secret_key
+        self.access_token = access_token
+        self.session_secret_key = session_secret_key
+        self.format = format
+
+    @property
+    def required_params(self):
+        """Required parameters."""
+        return {'application_key': self.app_key, 'format': self.format}
+
+    @property
+    def sig_circuit(self):
+        if self.session_secret_key and self.app_key:
+            return SignatureCircuit.CLIENT_SERVER
+        elif self.app_secret_key and self.access_token and self.app_key:
+            return SignatureCircuit.SERVER_SERVER
+        else:
+            return SignatureCircuit.UNDEFINED
+
+    @property
+    def secret_key(self):
+        if self.sig_circuit is SignatureCircuit.CLIENT_SERVER:
+            return self.session_secret_key
+        elif self.sig_circuit is SignatureCircuit.SERVER_SERVER:
+            plain = f'{self.access_token}{self.app_secret_key}'
+            return md5(plain.encode('utf-8')).hexdigest().lower()
+        else:
+            raise Error(self.ERROR_MSG)
+
+    def params_to_str(self, params):
+        query = ''.join(f'{k}={str(params[k])}' for k in sorted(params))
+        return f'{query}{self.secret_key}'
+
+    def sign_params(self, params):
+        query = self.params_to_str(params)
+        return md5(query.encode('utf-8')).hexdigest()
+
+    async def request(self, segments=(), params=()):
+        segments = f'/{"/".join(segments)}' if segments else ''
+        url = f'{self.API_URL}{segments}'
+
+        params = {k: params[k] for k in params if params[k]}
+        params.update(self.required_params)
+        params.update({'sig': self.sign_params(params)})
+
+        async with self.session.get(url, params=params) as resp:
+            content = await resp.json(content_type=self.CONTENT_TYPE)
+
+        if self.pass_error:
+            response = content
+        elif 'error_code' in content:
+            log.error(content)
+            raise APIError(content)
+        else:
+            response = content
+
+        return response
+
+
+class ClientSession(TokenSession):
+
+    ERROR_MSG = 'Pass "session_secret_key" to use client-server circuit.'
+
+    def __init__(self, app_key, session_secret_key,
+                 format='json', pass_error=False, session=None):
+        super().__init__(app_key, '', '', session_secret_key,
+                         format=format, pass_error=pass_error, session=session)
+
+
+class ServerSession(TokenSession):
+
+    ERROR_MSG = 'Pass "app_secret_key" and "access_token" ' \
+                'to use server-server circuit.'
+
+    def __init__(self, app_key, app_secret_key, access_token,
+                 format='json', pass_error=False, session=None):
+        super().__init__(app_key, app_secret_key, access_token, '',
+                         format=format, pass_error=pass_error, session=session)
