@@ -50,7 +50,8 @@ class PublicSession(Session):
 
         """
 
-        url = f'{self.PUBLIC_URL}/{"/".join(segments)}'
+        segments = f'/{"/".join(segments)}' if segments else ''
+        url = f'{self.PUBLIC_URL}{segments}'
 
         try:
             async with self.session.get(url, params=params) as resp:
