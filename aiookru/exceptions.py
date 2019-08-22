@@ -28,4 +28,4 @@ class APIError(Error):
         self.msg = error.get('error_msg')
 
     def __str__(self):
-        return f'Error {self.code}: {self.msg} Data: {self.data}.'
+        return f'Error {self.code}: "{self.msg}". Data: {self.data}.'
