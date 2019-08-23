@@ -6,3 +6,7 @@ from .sessions import (
     WebSession, ImplicitWebSession,
 )
 from .api import API
+
+import logging
+
+logging.basicConfig()
