@@ -29,3 +29,20 @@ class APIError(Error):
 
     def __str__(self):
         return f'Error {self.code}: "{self.msg}". Data: {self.data}.'
+
+
+class AuthError(Error):
+    ERROR = {
+        'error': 'invalid_user_credentials',
+        'error_description': 'invalid login or password',
+    }
+
+    def __init__(self):
+        super().__init__(self.ERROR)
+
+
+class OKAuthError(Error):
+    """Error 401."""
+
+    def __init__(self, error: dict):
+        super().__init__(error)
