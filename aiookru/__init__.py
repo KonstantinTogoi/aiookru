@@ -1,4 +1,4 @@
-from . import exceptions, utils, sessions, api
+from . import exceptions, utils, parsers, sessions, api
 from .sessions import (
     PublicSession,
     TokenSession,
