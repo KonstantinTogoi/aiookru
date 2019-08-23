@@ -1,4 +1,5 @@
 import aiohttp
+import asyncio
 import logging
 from hashlib import md5
 from yarl import URL
@@ -219,6 +220,16 @@ class ImplicitSession(TokenSession):
             elif url.path == '/dk' and st_cmd == 'OAuth2Login':
                 log.error('Invalid login or password.')
                 raise AuthError()
+
+            if url.path == '/blank.html':
+                log.debug('authorized successfully')
+                await self._get_access_token()
+                return self
+
+            await asyncio.sleep(interval)
+        else:
+            log.error('Authorization failed.')
+            raise Error('Authorization failed.')
 
     async def _get_auth_dialog(self):
         """Return URL and html code of authorization page."""
