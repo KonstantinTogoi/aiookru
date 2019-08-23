@@ -244,6 +244,7 @@ class ImplicitSession(TokenSession):
         parser.close()
 
         form_url, form_data = parser.form
+        form_url = f'https://connect.ok.ru{form_url}'
         form_data['fr.email'] = self.login
         form_data['fr.password'] = self.passwd
 
