@@ -1,9 +1,11 @@
 import aiohttp
 import logging
 from hashlib import md5
+from yarl import URL
 
-from .exceptions import Error, APIError
+from .exceptions import Error, APIError, AuthError, OKAuthError
 from .utils import SignatureCircuit
+from .parsers import AuthDialogParser, AccessDialogParser
 
 
 log = logging.getLogger(__name__)
@@ -99,10 +101,10 @@ class TokenSession(PublicSession):
 
     @property
     def sig_circuit(self):
-        if self.session_secret_key and self.app_key:
-            return SignatureCircuit.CLIENT_SERVER
-        elif self.app_secret_key and self.access_token and self.app_key:
+        if self.app_secret_key and self.access_token and self.app_key:
             return SignatureCircuit.SERVER_SERVER
+        elif self.session_secret_key and self.app_key:
+            return SignatureCircuit.CLIENT_SERVER
         else:
             return SignatureCircuit.UNDEFINED
 
@@ -165,6 +167,142 @@ class ServerSession(TokenSession):
                  format='json', pass_error=False, session=None):
         super().__init__(app_key, app_secret_key, access_token, '',
                          format=format, pass_error=pass_error, session=session)
+
+
+class ImplicitSession(TokenSession):
+    OAUTH_URL = 'https://connect.ok.ru/oauth/authorize'
+    REDIRECT_URI = 'https://oauth.mycdn.me/blank.html'
+
+    GET_AUTH_DIALOG_ERROR_MSG = 'Failed to open authorization dialog.'
+    POST_AUTH_DIALOG_ERROR_MSG = 'Form submission failed.'
+    GET_ACCESS_TOKEN_ERROR_MSG = 'Failed to receive access token.'
+    POST_ACCESS_DIALOG_ERROR_MSG = 'Failed to process access dialog.'
+
+    NUM_ATTEMPTS = 1
+    RETRY_INTERVAL = 1
+
+    __slots__ = ('app_id', 'login', 'passwd', 'permissions', 'expires_in')
+
+    def __init__(self, app_id, app_key, app_secret_key, login, passwd,
+                 permissions='', format='json', pass_error=False, session=None):
+        super().__init__(app_key, app_secret_key, '', '',
+                         format=format, pass_error=pass_error, session=session)
+        self.app_id = app_id
+        self.login = login
+        self.passwd = passwd
+        self.permissions = permissions
+
+    @property
+    def params(self):
+        """Authorization parameters."""
+        return {
+            'client_id': self.app_id,
+            'scope': self.permissions,
+            'response_type': 'token',
+            'redirect_uri': self.REDIRECT_URI,
+        }
+
+    async def authorize(self, attempts=NUM_ATTEMPTS, interval=RETRY_INTERVAL):
+        for attempt_num in range(attempts):
+            log.debug(f'getting authorization dialog {self.OAUTH_URL}')
+            url, html = await self._get_auth_dialog()
+
+            st_cmd = url.query.get('st.cmd')
+            if url.path == '/dk' and st_cmd == 'OAuth2Login':
+                log.debug(f'authorizing at {url}')
+                url, html = await self._post_auth_dialog(html)
+
+            st_cmd = url.query.get('st.cmd')
+            if url.path == '/dk' and st_cmd == 'OAuth2Permissions':
+                log.debug(f'giving permissions ar {url}')
+                url, html = await self._post_access_dialog(html)
+            elif url.path == '/dk' and st_cmd == 'OAuth2Login':
+                log.error('Invalid login or password.')
+                raise AuthError()
+
+    async def _get_auth_dialog(self):
+        """Return URL and html code of authorization page."""
+
+        async with self.session.get(self.OAUTH_URL, params=self.params) as resp:
+            if resp.status == 401:
+                error = await resp.json(content_type=self.CONTENT_TYPE)
+                log.error(error)
+                raise OKAuthError(error)
+            elif resp.status != 200:
+                log.error(self.GET_AUTH_DIALOG_ERROR_MSG)
+                raise Error(self.GET_AUTH_DIALOG_ERROR_MSG)
+            else:
+                url, html = resp.url, await resp.text()
+
+        return url, html
+
+    async def _post_auth_dialog(self, html):
+        """Submits a form with login and password to get access token."""
+
+        parser = AuthDialogParser()
+        parser.feed(html)
+        parser.close()
+
+        form_url, form_data = parser.form
+        form_data['fr.email'] = self.login
+        form_data['fr.password'] = self.passwd
+
+        async with self.session.post(form_url, data=form_data) as resp:
+            if resp.status != 200:
+                log.error(self.POST_AUTH_DIALOG_ERROR_MSG)
+                raise Error(self.POST_AUTH_DIALOG_ERROR_MSG)
+            else:
+                url, html = resp.url, await resp.text()
+
+        return url, html
+
+    async def _post_access_dialog(self, html):
+        """Clicks button 'allow' in an access dialog."""
+
+        parser = AccessDialogParser()
+        parser.feed(html)
+        parser.close()
+
+        form_url, form_data = parser.form
+
+        async with self.session.post(form_url, data=form_data) as resp:
+            if resp.status != 200:
+                log.error(self.POST_ACCESS_DIALOG_ERROR_MSG)
+                raise Error(self.POST_ACCESS_DIALOG_ERROR_MSG)
+            else:
+                url, html = resp.url, await resp.text()
+
+        return url, html
+
+    async def _get_access_token(self):
+        async with self.session.get(self.OAUTH_URL, params=self.params) as resp:
+            if resp.status != 200:
+                log.error(self.GET_ACCESS_TOKEN_ERROR_MSG)
+                raise Error(self.GET_ACCESS_TOKEN_ERROR_MSG)
+            else:
+                location = URL(resp.history[-1].headers['Location'])
+                url = URL(f'?{location.fragment}')
+
+        try:
+            self.access_token = url.query['access_token']
+            self.session_secret_key = url.query['session_secret_key']
+            self.expires_in = url.query['expires_in']
+        except KeyError as e:
+            raise Error(f'"{e.args[0]}" is missing in the auth response.')
+
+
+class ImplicitClientSession(ImplicitSession):
+    def __init__(self, app_id, app_key, login, passwd, permissions='',
+                 format='json', pass_error=False, session=None):
+        super().__init__(app_id, app_key, '', login, passwd, permissions,
+                         format, pass_error, session)
+
+
+class ImplicitServerSession(ImplicitSession):
+    def __init__(self, app_id, app_key, app_secret_key, login, passwd,
+                 permissions='', format='json', pass_error=False, session=None):
+        super().__init__(app_id, app_key, app_secret_key, login, passwd,
+                         permissions, format, pass_error, session)
 
 
 class WebSession(PublicSession):
