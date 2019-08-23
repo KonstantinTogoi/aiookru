@@ -165,3 +165,48 @@ class ServerSession(TokenSession):
                  format='json', pass_error=False, session=None):
         super().__init__(app_key, app_secret_key, access_token, '',
                          format=format, pass_error=pass_error, session=session)
+
+
+class WebSession(PublicSession):
+
+    def __init__(self, app_key, session_key, session_secret_key,
+                 format='json', pass_error=False, session=None):
+        super().__init__(pass_error, session)
+        self.app_key = app_key
+        self.session_key = session_key
+        self.session_secret_key = session_secret_key
+        self.format = format
+
+
+class ImplicitWebSession(WebSession):
+
+    __slots__ = ('login', 'passwd')
+
+    def __init__(self, app_key, login, passwd,
+                 format='json', pass_error=False, session=None):
+        super().__init__(app_key, '', '', format, pass_error, session)
+        self.login = login
+        self.passwd = passwd
+
+    @property
+    def params(self):
+        """Authorization parameters."""
+        return {
+            'method': 'auth.login',
+            'application_key': self.app_key,
+            'user_name': self.login,
+            'password': self.passwd,
+            'verification_supported': 1,
+            'verification_supported_v': 1,
+            'format': 'json',
+        }
+
+    async def authorize(self):
+        resp = await self.public_request(params=self.params)
+
+        if self.pass_error and 'error_code' in resp:
+            log.error(resp)
+            raise APIError(resp)
+        else:
+            self.session_key = resp['session_key']
+            self.session_secret_key = resp['session_secret_key']
