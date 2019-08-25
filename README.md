@@ -15,7 +15,6 @@
 This is [ok.ru](https://ok.ru) (Russian social network) python API wrapper.
 The goal is to support all API methods: https://apiok.ru/en/dev/methods/rest.
 
-
 ## Getting Started
 
 Install package using pip
@@ -24,7 +23,7 @@ Install package using pip
 pip install aiookru
 ```
 
-To use OK API you need a registered app and login in the social network.
+To use OK API you need a registered app and account in the social network.
 
 1. Sign up in [ok.ru](https://ok.ru)
 2. Create **external** application.
@@ -32,7 +31,7 @@ To use OK API you need a registered app and login in the social network.
 4. Use App ID, list of required permissions and user credentials to get **access token**.
 5. Use the access token to make method requests.
 
-After signing up got to https://apiok.ru/en/dev/app/create and create application.
+After signing up go to https://apiok.ru/en/dev/app/create and create application.
 
 ```python
 app_id = 'app ID'
