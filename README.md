@@ -45,7 +45,7 @@ You can authenticate with [OK API OAuth](https://apiok.ru/en/ext/oauth/) by pass
 `ImplicitServerSession`).
 
 ```python
-from aiookru import ImplicitSession
+from aiookru.sessions import ImplicitSession
 
 phone = '+1999123456'
 password = 'user password'
@@ -77,7 +77,7 @@ If you already have either of two:
 - `session_secret_key`
 
 ```python
-from aiookru import TokenSession
+from aiookru.sessions import TokenSession
 
 session = TokenSession(
     app_key=app_key,
