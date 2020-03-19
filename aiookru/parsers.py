@@ -19,11 +19,11 @@ class AuthDialogParser(html.parser.HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag == 'input':
             attrs = defaultdict(str, attrs)
-            if attrs['type'] != 'submit':
+            if attrs['type'].lower() != 'submit':
                 self.inputs[attrs['name']] = attrs['value']
         elif tag == 'form':
             attrs = defaultdict(str, attrs)
-            if attrs['method'] == 'post':
+            if attrs['method'].lower() == 'post':
                 self.url = attrs['action']
 
 
@@ -44,9 +44,9 @@ class AccessDialogParser(html.parser.HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag == 'input':
             attrs = defaultdict(str, attrs)
-            if attrs['type'] != 'submit':
+            if attrs['type'].lower() != 'submit':
                 self.inputs[attrs['name']] = attrs['value']
         elif tag == 'form':
             attrs = defaultdict(str, attrs)
-            if attrs['method'] == 'post':
+            if attrs['method'].lower() == 'post':
                 self.url = attrs['action']
