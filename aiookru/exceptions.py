@@ -41,6 +41,15 @@ class InvalidGrantError(CustomOAuthError):
     }
 
 
+class InvalidClientError(CustomOAuthError):
+    """Invalid client id."""
+
+    ERROR = {
+        'error': 'invalid_client',
+        'error_description': 'invalid client id',
+    }
+
+
 class APIError(Error):
     """API exceptions."""
 
