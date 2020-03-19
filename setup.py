@@ -20,6 +20,7 @@ setup(
     license='BSD',
     packages=['aiookru'],
     install_requires='aiohttp>=3.0.0',
+    tests_require=['pytest', 'pytest-asyncio', 'pytest-localserver'],
     keywords=['ok.ru api asyncio'],
     classifiers=[
         'Environment :: Web Environment',
