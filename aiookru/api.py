@@ -28,7 +28,7 @@ class APIMethod:
         self.name = name
 
     def __getattr__(self, name):
-        return APIMethod(self.api, f'{self.name}.{name}')
+        return APIMethod(self.api, self.name + '.' + name)
 
     async def __call__(self, *args, **params):
         params['method'] = self.name

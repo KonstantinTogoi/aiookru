@@ -55,14 +55,14 @@ class PublicSession(Session):
 
         """
 
-        segments = f'/{"/".join(segments)}' if segments else ''
-        url = f'{self.API_URL}{segments}'
+        segments = '/' + '/'.join(segments) if segments else ''
+        url = self.API_URL + segments
 
         try:
             async with self.session.get(url, params=params) as resp:
                 content = await resp.json(content_type=self.CONTENT_TYPE)
         except aiohttp.ContentTypeError:
-            msg = f'got non-REST path: {url}'
+            msg = 'got non-REST path: {url}'.format(url=url)
             log.error(msg)
             raise Error(msg)
 
@@ -114,22 +114,22 @@ class TokenSession(PublicSession):
         if self.sig_circuit is SignatureCircuit.CLIENT_SERVER:
             return self.session_secret_key
         elif self.sig_circuit is SignatureCircuit.SERVER_SERVER:
-            plain = f'{self.access_token}{self.app_secret_key}'
+            plain = self.access_token + self.app_secret_key
             return md5(plain.encode('utf-8')).hexdigest().lower()
         else:
             raise Error(self.ERROR_MSG)
 
     def params_to_str(self, params):
-        query = ''.join(f'{k}={str(params[k])}' for k in sorted(params))
-        return f'{query}{self.secret_key}'
+        query = ''.join(k + '=' + str(params[k]) for k in sorted(params))
+        return query + self.secret_key
 
     def sign_params(self, params):
         query = self.params_to_str(params)
         return md5(query.encode('utf-8')).hexdigest()
 
     async def request(self, segments=(), params=()):
-        segments = f'/{"/".join(segments)}' if segments else ''
-        url = f'{self.API_URL}{segments}'
+        segments = '/' + '/'.join(segments) if segments else ''
+        url = self.API_URL + segments
 
         params = {k: params[k] for k in params if params[k]}
         params.update(self.required_params)
@@ -205,17 +205,17 @@ class ImplicitSession(TokenSession):
 
     async def authorize(self, attempts=NUM_ATTEMPTS, interval=RETRY_INTERVAL):
         for attempt_num in range(attempts):
-            log.debug(f'getting authorization dialog {self.OAUTH_URL}')
+            log.debug('getting authorization dialog ' + self.OAUTH_URL)
             url, html = await self._get_auth_dialog()
 
             st_cmd = url.query.get('st.cmd')
             if url.path == '/dk' and st_cmd == 'OAuth2Login':
-                log.debug(f'authorizing at {url}')
+                log.debug('authorizing at {url}'.format(url=url))
                 url, html = await self._post_auth_dialog(html)
 
             st_cmd = url.query.get('st.cmd')
             if url.path == '/dk' and st_cmd == 'OAuth2Permissions':
-                log.debug(f'giving permissions ar {url}')
+                log.debug('giving permissions at {url}'.format(url=url))
                 url, html = await self._post_access_dialog(html)
             elif url.path == '/dk' and st_cmd == 'OAuth2Login':
                 log.error('Invalid login or password.')
@@ -255,7 +255,7 @@ class ImplicitSession(TokenSession):
         parser.close()
 
         form_url, form_data = parser.form
-        form_url = f'https://connect.ok.ru{form_url}'
+        form_url = 'https://connect.ok.ru' + form_url
         form_data['fr.email'] = self.login
         form_data['fr.password'] = self.passwd
 
@@ -293,14 +293,14 @@ class ImplicitSession(TokenSession):
                 raise Error(self.GET_ACCESS_TOKEN_ERROR_MSG)
             else:
                 location = URL(resp.history[-1].headers['Location'])
-                url = URL(f'?{location.fragment}')
+                url = URL('?' + location.fragment)
 
         try:
             self.access_token = url.query['access_token']
             self.session_secret_key = url.query['session_secret_key']
             self.expires_in = url.query['expires_in']
         except KeyError as e:
-            raise Error(f'"{e.args[0]}" is missing in the auth response.')
+            raise Error(str(e.args[0]) + ' is missing in the auth response.')
 
 
 class ImplicitClientSession(ImplicitSession):
