@@ -74,10 +74,3 @@ class APIError(Error):
         return 'Error {code}: "{msg}". Data: {data}.'.format(
             code=self.code, msg=self.msg, data=self.data
         )
-
-
-class OKAuthError(Error):
-    """Error 401."""
-
-    def __init__(self, error: dict):
-        super().__init__(error)
