@@ -7,8 +7,8 @@ from yarl import URL
 from .exceptions import (
     Error,
     OAuthError,
+    InvalidGrantError,
     APIError,
-    AuthError,
     OKAuthError,
 )
 from .utils import SignatureCircuit
@@ -225,7 +225,7 @@ class ImplicitSession(TokenSession):
                 url, html = await self._post_access_dialog(html)
             elif url.path == '/dk' and st_cmd == 'OAuth2Login':
                 log.error('Invalid login or password.')
-                raise AuthError()
+                raise InvalidGrantError()
 
             if url.path == '/blank.html':
                 log.debug('authorized successfully')
