@@ -131,6 +131,7 @@ or if you already have an access token
 ```python
 from aiookru import ServerSession, API
 session = ServerSession(app_key, app_secret_key, access_token)
+api = API(session)
 ```
 
 #### Client-Server circuit
@@ -145,7 +146,7 @@ or if you already have a session secret key
 
 ```python
 from aiookru import ClientSession, API
-session = await ClientSession(app_key, session_secret_key)
+session = ClientSession(app_key, session_secret_key)
 api = API(session)
 ```
 
