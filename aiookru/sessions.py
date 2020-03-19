@@ -4,7 +4,13 @@ import logging
 from hashlib import md5
 from yarl import URL
 
-from .exceptions import Error, APIError, AuthError, OKAuthError
+from .exceptions import (
+    Error,
+    OAuthError,
+    APIError,
+    AuthError,
+    OKAuthError,
+)
 from .utils import SignatureCircuit
 from .parsers import AuthDialogParser, AccessDialogParser
 
@@ -229,7 +235,7 @@ class ImplicitSession(TokenSession):
             await asyncio.sleep(interval)
         else:
             log.error('Authorization failed.')
-            raise Error('Authorization failed.')
+            raise OAuthError('Authorization failed.')
 
     async def _get_auth_dialog(self):
         """Return URL and html code of authorization page."""
@@ -241,7 +247,7 @@ class ImplicitSession(TokenSession):
                 raise OKAuthError(error)
             elif resp.status != 200:
                 log.error(self.GET_AUTH_DIALOG_ERROR_MSG)
-                raise Error(self.GET_AUTH_DIALOG_ERROR_MSG)
+                raise OAuthError(self.GET_AUTH_DIALOG_ERROR_MSG)
             else:
                 url, html = resp.url, await resp.text()
 
@@ -262,7 +268,7 @@ class ImplicitSession(TokenSession):
         async with self.session.post(form_url, data=form_data) as resp:
             if resp.status != 200:
                 log.error(self.POST_AUTH_DIALOG_ERROR_MSG)
-                raise Error(self.POST_AUTH_DIALOG_ERROR_MSG)
+                raise OAuthError(self.POST_AUTH_DIALOG_ERROR_MSG)
             else:
                 url, html = resp.url, await resp.text()
 
@@ -282,7 +288,7 @@ class ImplicitSession(TokenSession):
         async with self.session.post(form_url, data=form_data) as resp:
             if resp.status != 200:
                 log.error(self.POST_ACCESS_DIALOG_ERROR_MSG)
-                raise Error(self.POST_ACCESS_DIALOG_ERROR_MSG)
+                raise OAuthError(self.POST_ACCESS_DIALOG_ERROR_MSG)
             else:
                 url, html = resp.url, await resp.text()
 
@@ -292,7 +298,7 @@ class ImplicitSession(TokenSession):
         async with self.session.get(self.OAUTH_URL, params=self.params) as resp:
             if resp.status != 200:
                 log.error(self.GET_ACCESS_TOKEN_ERROR_MSG)
-                raise Error(self.GET_ACCESS_TOKEN_ERROR_MSG)
+                raise OAuthError(self.GET_ACCESS_TOKEN_ERROR_MSG)
             else:
                 location = URL(resp.history[-1].headers['Location'])
                 url = URL('?' + location.fragment)
@@ -302,7 +308,7 @@ class ImplicitSession(TokenSession):
             self.session_secret_key = url.query['session_secret_key']
             self.expires_in = url.query['expires_in']
         except KeyError as e:
-            raise Error(str(e.args[0]) + ' is missing in the auth response.')
+            raise OAuthError(str(e.args[0]) + ' is missing in the response.')
 
 
 class ImplicitClientSession(ImplicitSession):
