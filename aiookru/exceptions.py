@@ -50,6 +50,15 @@ class InvalidClientError(CustomOAuthError):
     }
 
 
+class InvalidUserError(CustomOAuthError):
+    """Invalid user (blocked)."""
+
+    ERROR = {
+        'error': 'invalid_user',
+        'error_description': 'user is blocked',
+    }
+
+
 class APIError(Error):
     """API exceptions."""
 
