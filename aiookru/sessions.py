@@ -68,7 +68,7 @@ class PublicSession(Session):
 
         if self.pass_error:
             response = content
-        elif 'error_code' in content:
+        elif content and 'error_code' in content:
             log.error(content)
             raise APIError(content)
         else:
