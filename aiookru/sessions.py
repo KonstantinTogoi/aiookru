@@ -276,6 +276,8 @@ class ImplicitSession(TokenSession):
         parser.close()
 
         form_url, form_data = parser.form
+        form_url = 'https://connect.ok.ru' + form_url
+        form_data['button_accept_request'] = ''
 
         async with self.session.post(form_url, data=form_data) as resp:
             if resp.status != 200:
