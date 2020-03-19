@@ -9,6 +9,7 @@ from .exceptions import (
     OAuthError,
     InvalidGrantError,
     APIError,
+    CustomAPIError,
 )
 from .utils import SignatureCircuit
 from .parsers import AuthDialogParser, AccessDialogParser
@@ -73,11 +74,14 @@ class PublicSession(Session):
 
         if self.pass_error:
             response = content
-        elif content and 'error_code' in content:
+        elif 'error_code' in content:
             log.error(content)
             raise APIError(content)
-        else:
+        elif content:
             response = content
+        else:
+            log.error('empty response')
+            raise CustomAPIError('empty response')
 
         return response
 
@@ -148,8 +152,11 @@ class TokenSession(PublicSession):
         elif 'error_code' in content:
             log.error(content)
             raise APIError(content)
-        else:
+        elif content:
             response = content
+        else:
+            log.error('empty response')
+            raise CustomAPIError('empty response')
 
         return response
 

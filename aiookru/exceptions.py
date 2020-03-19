@@ -60,7 +60,7 @@ class InvalidUserError(CustomOAuthError):
 
 
 class APIError(Error):
-    """API exceptions."""
+    """API error."""
 
     __slots__ = ('code', 'data', 'msg')
 
@@ -74,3 +74,11 @@ class APIError(Error):
         return 'Error {code}: "{msg}". Data: {data}.'.format(
             code=self.code, msg=self.msg, data=self.data
         )
+
+
+class CustomAPIError(APIError):
+    """Custom API error."""
+
+    def __init__(self, msg: str):
+        error = {'error_code': -1, 'error_data': {}, 'error_msg': msg}
+        super().__init__(error)
