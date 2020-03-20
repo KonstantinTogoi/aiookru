@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html class="">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="Content-Script-Type" content="text/javascript">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+          content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>Одноклассники</title>
+    <link href="//st.mycdn.me/res/css/prod/widget/oauth.9c487528.css"
+          type="text/css" rel="stylesheet">
+</head>
+<script type="text/javascript">
+    try {    top.location.toString(); } catch(e) {    top.location = location; }
+</script>
+<body>
+<div id="hook_Block_OAuth2Login" class="hookBlock">
+    <form method="post"
+          action="/dk?cmd=OAuth2Login&amp;st.cmd=OAuth2Login">
+        <div class="ext-widget __no-footer" id="widget-el">
+            <div class="ext-widget_h"><a
+                    href="https://ok.ru/feed?st.cmd=userMain"
+                    class="ext-widget_h_ico" target="_blank"></a>
+                <div class="ext-widget_h_tx">Одноклассники</div>
+            </div>
+            <div class="ext-widget_cnt-w __center">
+                <div class="ext-widget_cnt js-ext-widget-content">
+                    <div class="widget-oauth"><input name="fr.posted"
+                                                     type="hidden"
+                                                     value="set"></input>
+                        <div class="form_i"><span class="input-l"><label
+                                for="field_email">Логин, адрес почты или телефон</label></span>
+                            <div class="it_w"><input tabindex="1"
+                                                     name="fr.email"
+                                                     id="field_email"
+                                                     type="text" value=""
+                                                     class="it"></input></div>
+                        </div>
+                        <div class="form_i"><span class="input-l"><label
+                                for="field_password">пароль</label><a
+                                href="https://ok.ru/dk?st.cmd=anonymRecoveryStart"
+                                target="_blank">Забыли пароль?</a></span>
+                            <div class="it_w"><input tabindex="2"
+                                                     name="fr.password"
+                                                     id="field_password"
+                                                     type="password"
+                                                     class="it"></input></div>
+                        </div>
+                        <div class="form_i"><label
+                                class="irc_w __modern __o"><input
+                                name="fr.remember" checked="checked"
+                                id="field_remember" type="checkbox" value="on"
+                                class="irc"></input><span
+                                class="irc-vis"></span><span class="irc_l">запомнить меня</span></label>
+                        </div>
+                        <div class="form-actions"><input value="Войти"
+                                                         onclick="this.className +=' __disabled'"
+                                                         tabindex="3"
+                                                         type="submit"
+                                                         class="button-pro __wide form-actions_yes"></input><a
+                                href="https://ok.ru/dk?st.cmd=anonymRegistrationEnterPhone"
+                                class="button-pro __wide __sec mt-4x"
+                                target="_blank">Зарегистрироваться</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            (function() { var el = document.getElementById('widget-el'), maxWidth = 588, headAndFooterHeight = 107, cntEl = el.querySelector('.js-ext-widget-content'), height, width, prevHeight = 100000, prevWidth = 100000, prevValue = { width: 0, height: 0 }; function resize() { var outerHeightDelta = window.outerHeight ? window.outerHeight - window.innerHeight : 100; var outerWidthDelta = window.outerWidth ? window.outerWidth - window.innerWidth : 0; var scrollWidth = window.innerWidth - document.body.offsetWidth; var scrollHeight = window.innerHeight - document.body.offsetHeight; width = Math.min(cntEl.offsetWidth + outerWidthDelta + scrollWidth, screen.width * 0.9, maxWidth + scrollWidth); height = Math.min(cntEl.offsetHeight + outerHeightDelta + scrollHeight + headAndFooterHeight, screen.height * 0.9); var check = { width: width, height: height }; if (Math.abs(check.width - prevValue.width) > 1 || Math.abs(check.height - prevValue.height) > 1 ) { prevValue = check; prevHeight = height; prevWidth = width; var x = screen.width / 2 - width / 2; var y = screen.height / 2 - height / 2; window.resizeTo(width, height); window.moveTo(x, y); window.focus(); } setTimeout(resize, 250); } resize(); var cancelBtn = el.querySelector('.js-confirm-widget-cancel'); if (cancelBtn) { cancelBtn.addEventListener('click', function (e) { e.preventDefault(); window.close(); }); } var menuTrigger = document.getElementById('widget-layout-menu-trigger'), menu = document.getElementById('widget-layout-menu'); if (menuTrigger) { menuTrigger.addEventListener('click', function (e) { menu.classList.toggle('invisible'); e.stopPropagation(); }); menu.addEventListener('click', function (e) { e.stopPropagation(); }); document.body.addEventListener('click', function () { if (!menu.classList.contains('invisible')) { menu.classList.add('invisible'); } }); } })();
+        </script>
+    </form>
+    <script>
+        var OK = OK || {}; OK.afterWindowOnloadAttach = function(fn) {fn.call();}
+    </script>
+    <script>
+        setTimeout(function() { var textbox = document.getElementById('field_email'); if (textbox && textbox.value == '') { textbox.focus(); } }, 1);
+    </script>
+</div>
+</body>
+</html>

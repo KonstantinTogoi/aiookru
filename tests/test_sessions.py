@@ -1,8 +1,15 @@
+import json
+from os.path import dirname, join
+
 import pytest
 
-from aiookru.exceptions import Error, APIError, CustomAPIError
-from aiookru.sessions import PublicSession, TokenSession
+from aiookru.exceptions import (
+    Error, OAuthError, APIError, CustomAPIError
+)
+from aiookru.sessions import PublicSession, TokenSession, ImplicitSession
 from aiookru.utils import SignatureCircuit
+
+data_path = join(dirname(__file__), 'data')
 
 
 class TestPublicSession:
@@ -139,3 +146,103 @@ class TestTokenSession:
             session.pass_error = False
             response = await session.request(params={'key': 'value'})
             assert response == data
+
+
+class TestImplicitSession:
+    """Tests of ImplicitSession class."""
+
+    @pytest.fixture
+    def app(self):
+        return {'app_id': 123, 'app_key': 456, 'app_secret_key': ''}
+
+    @pytest.fixture
+    def cred(self):
+        return {'login': 'email@example.ru', 'passwd': 'password'}
+
+    @pytest.fixture
+    def auth_dialog(self):
+        with open(join(data_path, 'dialogs', 'auth_dialog.html')) as f:
+            return f.read()
+
+    @pytest.fixture
+    def access_dialog(self):
+        with open(join(data_path, 'dialogs', 'access_dialog.html')) as f:
+            return f.read()
+
+    async def test_get_auth_dialog(self, app, cred, httpserver, auth_dialog):
+        # success
+        httpserver.serve_content(**{
+            'code': 200,
+            'headers': {'Content-Type': 'text/html'},
+            'content': auth_dialog
+        })
+        session = ImplicitSession(**app, **cred)
+        session.OAUTH_URL = httpserver.url
+        url, html = await session._get_auth_dialog()
+
+        assert url.query['client_id'] == str(session.app_id)
+        assert url.query['scope'] == session.permissions
+        assert url.query['response_type'] == 'token'
+        assert url.query['redirect_uri'] == session.REDIRECT_URI
+        assert html == auth_dialog
+
+        # fail
+        httpserver.serve_content(**{
+            'code': 400,
+            'headers': {'Content-Type': 'text/json'},
+            'content': json.dumps({'error': '', 'error_description': ''})
+        })
+        with pytest.raises(OAuthError):
+            _ = await session._get_auth_dialog()
+
+        await session.close()
+
+    async def test_post_auth_dialog(self, app, cred, httpserver,
+                                    auth_dialog, access_dialog):
+        # success
+        httpserver.serve_content(**{'code': 200, 'content': access_dialog})
+        session = ImplicitSession(**app, **cred)
+        session.CONNECT_URL = httpserver.url
+
+        auth_dialog = auth_dialog.replace(
+            '/dk?cmd=OAuth2Login&amp;st.cmd=OAuth2Login', ''
+        )
+        url, html = await session._post_auth_dialog(auth_dialog)
+        assert html == access_dialog
+
+        # fail
+        httpserver.serve_content(**{'code': 400, 'content': ''})
+        with pytest.raises(OAuthError):
+            _ = await session._post_auth_dialog(auth_dialog)
+
+        await session.close()
+
+    async def test_post_access_dialog(self, app, cred, httpserver, access_dialog):
+        # success
+        httpserver.serve_content(**{'code': 200, 'content': 'blank page'})
+        session = ImplicitSession(**app, **cred)
+        session.CONNECT_URL = httpserver.url
+
+        access_dialog = access_dialog.replace(
+            '/dk?st.cmd=OAuth2Permissions&amp;cmd=OAuth2Permissions', ''
+        )
+        url, html = await session._post_access_dialog(access_dialog)
+        assert html == 'blank page'
+
+        # fail
+        httpserver.serve_content(**{'code': 400, 'content': ''})
+        with pytest.raises(OAuthError):
+            _ = await session._post_access_dialog(access_dialog)
+
+        await session.close()
+
+    async def test_get_access_token(self, app, cred, httpserver):
+        # fail
+        httpserver.serve_content(**{'code': 400, 'content': ''})
+        session = ImplicitSession(**app, **cred)
+        session.OAUTH_URL = httpserver.url
+
+        with pytest.raises(OAuthError):
+            _ = await session._get_access_token()
+
+        await session.close()
