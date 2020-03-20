@@ -19,7 +19,7 @@ setup(
     long_description_content_type='text/markdown',
     license='BSD',
     packages=['aiookru'],
-    install_requires='aiohttp>=3.0.0',
+    install_requires=['aiohttp>=3.0.0', 'yarl'],
     tests_require=['pytest', 'pytest-asyncio', 'pytest-localserver'],
     keywords=['ok.ru api asyncio'],
     classifiers=[
