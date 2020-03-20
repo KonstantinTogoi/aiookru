@@ -1,5 +1,5 @@
-from collections import defaultdict
 import html.parser
+from collections import defaultdict
 
 
 class AuthDialogParser(html.parser.HTMLParser):

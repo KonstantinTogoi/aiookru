@@ -1,7 +1,8 @@
-import aiohttp
 import asyncio
 import logging
 from hashlib import md5
+
+import aiohttp
 from yarl import URL
 
 from .exceptions import (
