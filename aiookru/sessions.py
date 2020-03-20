@@ -183,7 +183,8 @@ class ServerSession(TokenSession):
 
 
 class ImplicitSession(TokenSession):
-    OAUTH_URL = 'https://connect.ok.ru/oauth/authorize'
+    CONNECT_URL = 'https://connect.ok.ru'
+    OAUTH_URL = CONNECT_URL + '/oauth/authorize'
     REDIRECT_URI = 'https://oauth.mycdn.me/blank.html'
 
     GET_AUTH_DIALOG_ERROR_MSG = 'Failed to open authorization dialog.'
@@ -267,7 +268,7 @@ class ImplicitSession(TokenSession):
         parser.close()
 
         form_url, form_data = parser.form
-        form_url = 'https://connect.ok.ru' + form_url
+        form_url = self.CONNECT_URL + form_url
         form_data['fr.email'] = self.login
         form_data['fr.password'] = self.passwd
 
@@ -288,7 +289,7 @@ class ImplicitSession(TokenSession):
         parser.close()
 
         form_url, form_data = parser.form
-        form_url = 'https://connect.ok.ru' + form_url
+        form_url = self.CONNECT_URL + form_url
         form_data['button_accept_request'] = ''
 
         async with self.session.post(form_url, data=form_data) as resp:
