@@ -20,6 +20,7 @@ setup(
     license='BSD',
     packages=['aiookru'],
     install_requires=['aiohttp>=3.0.0', 'yarl'],
+    setup_requires=['pytest-runner'],
     tests_require=['pytest', 'pytest-asyncio', 'pytest-localserver'],
     keywords=['ok.ru api asyncio'],
     python_requires='>=3.5',
