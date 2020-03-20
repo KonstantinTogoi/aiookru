@@ -22,6 +22,7 @@ setup(
     install_requires=['aiohttp>=3.0.0', 'yarl'],
     tests_require=['pytest', 'pytest-asyncio', 'pytest-localserver'],
     keywords=['ok.ru api asyncio'],
+    python_requires='>=3.5',
     classifiers=[
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
