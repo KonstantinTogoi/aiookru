@@ -1,5 +1,4 @@
 import json
-from os.path import dirname, join
 
 import pytest
 
@@ -8,8 +7,6 @@ from aiookru.exceptions import (
 )
 from aiookru.sessions import PublicSession, TokenSession, ImplicitSession
 from aiookru.utils import SignatureCircuit
-
-data_path = join(dirname(__file__), 'data')
 
 
 class TestPublicSession:
@@ -158,16 +155,6 @@ class TestImplicitSession:
     @pytest.fixture
     def cred(self):
         return {'login': 'email@example.ru', 'passwd': 'password'}
-
-    @pytest.fixture
-    def auth_dialog(self):
-        with open(join(data_path, 'dialogs', 'auth_dialog.html')) as f:
-            return f.read()
-
-    @pytest.fixture
-    def access_dialog(self):
-        with open(join(data_path, 'dialogs', 'access_dialog.html')) as f:
-            return f.read()
 
     async def test_get_auth_dialog(self, app, cred, httpserver, auth_dialog):
         # success

@@ -1,9 +1,12 @@
 import json
+from os.path import dirname, join
+
 import pytest
 
-from aiookru.sessions import (
-    PublicSession,
-)
+from aiookru.sessions import PublicSession
+
+
+data_path = join(dirname(__file__), 'data')
 
 
 @pytest.fixture
@@ -49,3 +52,15 @@ async def data_server(httpserver, data):
         'content': json.dumps(data),
     })
     return httpserver
+
+
+@pytest.fixture
+def auth_dialog():
+    with open(join(data_path, 'dialogs', 'auth_dialog.html')) as f:
+        return f.read()
+
+
+@pytest.fixture
+def access_dialog():
+    with open(join(data_path, 'dialogs', 'access_dialog.html')) as f:
+        return f.read()
