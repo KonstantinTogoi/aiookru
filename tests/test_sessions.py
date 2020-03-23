@@ -13,7 +13,7 @@ class TestPublicSession:
     """Tests of PublicSession class."""
 
     @pytest.mark.asyncio
-    async def test_error_request(self, error, error_server):
+    async def test_error_request(self, error_server, error):
         async with PublicSession() as session:
             session.API_URL = error_server.url
 
