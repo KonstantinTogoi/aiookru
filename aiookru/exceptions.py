@@ -79,6 +79,11 @@ class APIError(Error):
 class CustomAPIError(APIError):
     """Custom API error."""
 
-    def __init__(self, msg: str):
-        error = {'error_code': -1, 'error_data': {}, 'error_msg': msg}
-        super().__init__(error)
+    ERROR = {'error_code': 0, 'error_data': {}, 'error_msg': ''}
+
+    def __init__(self):
+        super().__init__(self.ERROR)
+
+
+class EmptyResponseError(CustomAPIError):
+    ERROR = {'error_code': -1, 'error_data': {}, 'error_msg': 'empty response'}

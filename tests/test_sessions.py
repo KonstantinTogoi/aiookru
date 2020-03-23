@@ -3,7 +3,7 @@ import json
 import pytest
 
 from aiookru.exceptions import (
-    Error, OAuthError, APIError, CustomAPIError
+    Error, OAuthError, APIError, EmptyResponseError
 )
 from aiookru.sessions import PublicSession, TokenSession, ImplicitSession
 from aiookru.utils import SignatureCircuit
@@ -45,7 +45,7 @@ class TestPublicSession:
             session.API_URL = dummy_server.url
 
             session.pass_error = False
-            with pytest.raises(CustomAPIError):
+            with pytest.raises(EmptyResponseError):
                 await session.public_request()
 
     @pytest.mark.asyncio
@@ -65,11 +65,11 @@ class TestPublicSession:
 class TestTokenSession:
     """Tests of TokenSession class."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def app(self):
         return {'app_key': 123, 'app_secret_key': ''}
 
-    @pytest.fixture()
+    @pytest.fixture
     def token(self):
         return {'access_token': '', 'session_secret_key': ''}
 
@@ -140,7 +140,7 @@ class TestTokenSession:
             session.session_secret_key = 'session key'
 
             session.pass_error = False
-            with pytest.raises(CustomAPIError):
+            with pytest.raises(EmptyResponseError):
                 await session.request(params={'key': 'value'})
 
     @pytest.mark.asyncio

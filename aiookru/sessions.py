@@ -10,7 +10,7 @@ from .exceptions import (
     OAuthError,
     InvalidGrantError,
     APIError,
-    CustomAPIError,
+    EmptyResponseError,
 )
 from .utils import SignatureCircuit
 from .parsers import AuthDialogParser, AccessDialogParser
@@ -81,8 +81,8 @@ class PublicSession(Session):
         elif content:
             response = content
         else:
-            log.error('empty response')
-            raise CustomAPIError('empty response')
+            log.error('got empty response: %s' % url)
+            raise EmptyResponseError()
 
         return response
 
@@ -156,8 +156,8 @@ class TokenSession(PublicSession):
         elif content:
             response = content
         else:
-            log.error('empty response')
-            raise CustomAPIError('empty response')
+            log.error('got empty response: %s' % url)
+            raise EmptyResponseError()
 
         return response
 
