@@ -182,7 +182,7 @@ class TestImplicitSession:
         url, html = await session._get_auth_dialog()
 
         assert url.query['client_id'] == str(session.app_id)
-        assert url.query['scope'] == session.permissions
+        assert url.query['scope'] == session.scope
         assert url.query['response_type'] == 'token'
         assert url.query['redirect_uri'] == session.REDIRECT_URI
         assert html == auth_dialog

@@ -69,7 +69,7 @@ class PublicSession(Session):
             async with self.session.get(url, params=params) as resp:
                 content = await resp.json(content_type=self.CONTENT_TYPE)
         except aiohttp.ContentTypeError:
-            msg = 'got non-REST path: {url}'.format(url=url)
+            msg = 'got non-REST path: %s' % url
             log.error(msg)
             raise Error(msg)
 
@@ -88,7 +88,7 @@ class PublicSession(Session):
 
 
 class TokenSession(PublicSession):
-    """Session for sending authorized requests."""
+    """Session for executing authorized requests."""
 
     ERROR_MSG = 'See calculating signature at https://apiok.ru/dev/methods/.'
 
@@ -138,6 +138,16 @@ class TokenSession(PublicSession):
         return md5(query.encode('utf-8')).hexdigest()
 
     async def request(self, segments=(), params=()):
+        """Sends a request.
+
+        Args:
+            segments (tuple): additional segments for URL path.
+            params (dict): URL parameters
+
+        Returns:
+            response (dict): JSON object response.
+
+        """
         segments = '/' + '/'.join(segments) if segments else ''
         url = self.API_URL + segments
 
@@ -163,6 +173,7 @@ class TokenSession(PublicSession):
 
 
 class ClientSession(TokenSession):
+    """Session for executing requests in client applications."""
 
     ERROR_MSG = 'Pass "session_secret_key" to use client-server circuit.'
 
@@ -173,6 +184,7 @@ class ClientSession(TokenSession):
 
 
 class ServerSession(TokenSession):
+    """Session for executing requests in server applications."""
 
     ERROR_MSG = 'Pass "app_secret_key" and "access_token" ' \
                 'to use server-server circuit.'
@@ -184,6 +196,20 @@ class ServerSession(TokenSession):
 
 
 class ImplicitSession(TokenSession):
+    """Session with authorization with OAuth 2.0 (Implicit Grant).
+
+    The Implicit flow was a simplified OAuth flow previously recommended
+    for native apps and JavaScript apps where the access token was returned
+    immediately without an extra authorization code exchange step.
+
+    .. _OAuth 2.0 Implicit Grant
+        https://oauth.net/2/grant-types/implicit/
+
+    .. _Клиентская OAuth авторизация
+        https://apiok.ru/ext/oauth/client
+
+    """
+
     CONNECT_URL = 'https://connect.ok.ru'
     OAUTH_URL = CONNECT_URL + '/oauth/authorize'
     REDIRECT_URI = 'https://oauth.mycdn.me/blank.html'
@@ -193,32 +219,43 @@ class ImplicitSession(TokenSession):
     GET_ACCESS_TOKEN_ERROR_MSG = 'Failed to receive access token.'
     POST_ACCESS_DIALOG_ERROR_MSG = 'Failed to process access dialog.'
 
-    NUM_ATTEMPTS = 1
-    RETRY_INTERVAL = 1
+    AUTHORIZE_NUM_ATTEMPTS = 1
+    AUTHORIZE_RETRY_INTERVAL = 1
 
-    __slots__ = ('app_id', 'login', 'passwd', 'permissions', 'expires_in')
+    __slots__ = ('app_id', 'scope', 'redirect_uri', 'state',
+                 'expires_in', 'login', 'passwd', 'permissions_granted')
 
     def __init__(self, app_id, app_key, app_secret_key, login, passwd,
-                 permissions='', format='json', pass_error=False, session=None):
+                 scope='', redirect_uri='', state='', format='json',
+                 pass_error=False, session=None):
         super().__init__(app_key, app_secret_key, '', '',
                          format=format, pass_error=pass_error, session=session)
         self.app_id = app_id
         self.login = login
         self.passwd = passwd
-        self.permissions = permissions
+        self.scope = scope
+        self.redirect_uri = redirect_uri or self.REDIRECT_URI
+        self.state = state
 
     @property
     def params(self):
-        """Authorization parameters."""
+        """Authorization request's parameters."""
         return {
             'client_id': self.app_id,
-            'scope': self.permissions,
+            'scope': self.scope,
             'response_type': 'token',
-            'redirect_uri': self.REDIRECT_URI,
+            'redirect_uri': self.redirect_uri,
+            'layout': 'w',
+            'state': self.state,
         }
 
-    async def authorize(self, attempts=NUM_ATTEMPTS, interval=RETRY_INTERVAL):
-        for attempt_num in range(attempts):
+    async def authorize(self, num_attempts=None, retry_interval=None):
+        """Authorize with OAuth 2.0 (Implicit flow)."""
+
+        num_attempts = num_attempts or self.AUTHORIZE_NUM_ATTEMPTS
+        retry_interval = retry_interval or self.AUTHORIZE_RETRY_INTERVAL
+
+        for attempt_num in range(num_attempts):
             log.debug('getting authorization dialog ' + self.OAUTH_URL)
             url, html = await self._get_auth_dialog()
 
@@ -240,10 +277,10 @@ class ImplicitSession(TokenSession):
                 await self._get_access_token()
                 return self
 
-            await asyncio.sleep(interval)
+            await asyncio.sleep(retry_interval)
         else:
-            log.error('Authorization failed.')
-            raise OAuthError('Authorization failed.')
+            log.error('%d login attempts exceeded.' % num_attempts)
+            raise OAuthError('%d login attempts exceeded.' % num_attempts)
 
     async def _get_auth_dialog(self):
         """Return URL and html code of authorization page."""
@@ -314,49 +351,51 @@ class ImplicitSession(TokenSession):
         try:
             self.access_token = url.query['access_token']
             self.session_secret_key = url.query['session_secret_key']
-            self.expires_in = url.query['expires_in']
+            self.state = url.query.get('state')
+            self.permissions_granted = url.query.get('permissions_granted')
+            self.expires_in = url.query.get('expires_in')
         except KeyError as e:
             raise OAuthError(str(e.args[0]) + ' is missing in the response.')
 
 
 class ImplicitClientSession(ImplicitSession):
-    def __init__(self, app_id, app_key, login, passwd, permissions='',
-                 format='json', pass_error=False, session=None):
-        super().__init__(app_id, app_key, '', login, passwd, permissions,
-                         format, pass_error, session)
+    """`ImplicitSession` without `app_secret_key` argument."""
+
+    def __init__(self, app_id, app_key, login, passwd, scope='',
+                 redirect_uri='', state='', format='json',
+                 pass_error=False, session=None):
+        super().__init__(app_id, app_key, '', login, passwd,
+                         scope, redirect_uri, state, format,
+                         pass_error, session)
 
 
 class ImplicitServerSession(ImplicitSession):
-    def __init__(self, app_id, app_key, app_secret_key, login, passwd,
-                 permissions='', format='json', pass_error=False, session=None):
-        super().__init__(app_id, app_key, app_secret_key, login, passwd,
-                         permissions, format, pass_error, session)
+    """The same as `ImplicitSession`."""
 
 
-class WebSession(PublicSession):
+class PasswordSession(TokenSession):
+    """Session with authorization with OAuth 2.0 (Password Grant).
 
-    def __init__(self, app_key, session_key, session_secret_key,
-                 format='json', pass_error=False, session=None):
-        super().__init__(pass_error, session)
-        self.app_key = app_key
-        self.session_key = session_key
-        self.session_secret_key = session_secret_key
-        self.format = format
+    The Password grant type is a way to exchange a user's credentials
+    for an access token.
 
+    .. _OAuth 2.0 Password Grant
+        https://oauth.net/2/grant-types/password/
 
-class ImplicitWebSession(WebSession):
+    """
 
     __slots__ = ('login', 'passwd')
 
-    def __init__(self, app_key, login, passwd,
+    def __init__(self, app_key, app_secret_key, login, passwd,
                  format='json', pass_error=False, session=None):
-        super().__init__(app_key, '', '', format, pass_error, session)
+        super().__init__(app_key, app_secret_key, '', '',
+                         format, pass_error, session)
         self.login = login
         self.passwd = passwd
 
     @property
     def params(self):
-        """Authorization parameters."""
+        """Authorization request's parameters."""
         return {
             'method': 'auth.login',
             'application_key': self.app_key,
@@ -368,11 +407,31 @@ class ImplicitWebSession(WebSession):
         }
 
     async def authorize(self):
-        resp = await self.public_request(params=self.params)
+        """Authorize with OAuth 2.0 (Password Grant)."""
 
-        if self.pass_error and 'error_code' in resp:
-            log.error(resp)
-            raise APIError(resp)
+        async with self.session.get(self.API_URL, params=self.params) as resp:
+            content = await resp.json(content_type=self.CONTENT_TYPE)
+
+        if 'error_code' in content:
+            log.error(content)
+            raise APIError(content)
+        elif content:
+            self.access_token = content['session_key']
+            self.session_secret_key = content['session_secret_key']
         else:
-            self.session_key = resp['session_key']
-            self.session_secret_key = resp['session_secret_key']
+            raise OAuthError('got empty authorization response')
+
+        return self
+
+
+class PasswordClientSession(PasswordSession):
+    """`PasswordSession` without `app_secret_key` argument."""
+
+    def __init__(self, app_key, login, passwd,
+                 format='json', pass_error=False, session=None):
+        super().__init__(app_key, '', login, passwd,
+                         format, pass_error, session)
+
+
+class PasswordServerSession(PasswordSession):
+    """The same as `PasswordSession`."""
