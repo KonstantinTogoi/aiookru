@@ -106,6 +106,14 @@ class TokenSession(PublicSession):
         self.format = format
 
     @property
+    def session_key(self):
+        return self.access_token
+
+    @session_key.setter
+    def session_key(self, session_key):
+        self.access_token = session_key
+
+    @property
     def required_params(self):
         """Required parameters."""
         return {'application_key': self.app_key, 'format': self.format}
