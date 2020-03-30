@@ -1,5 +1,5 @@
 from os.path import dirname, join
-from setuptools import setup
+from setuptools import find_packages, setup
 
 
 readme_path = join(dirname(__file__), 'README.md')
@@ -18,12 +18,12 @@ setup(
     long_description=readme,
     long_description_content_type='text/markdown',
     license='BSD',
-    packages=['aiookru'],
+    packages=find_packages(),
+    python_requires='>=3.5',
     install_requires=['aiohttp>=3.0.0', 'yarl'],
     setup_requires=['pytest-runner'],
-    tests_require=['pytest', 'pytest-asyncio', 'pytest-localserver'],
+    tests_require=['pytest-asyncio', 'pytest-localserver'],
     keywords=['ok.ru api asyncio'],
-    python_requires='>=3.5',
     classifiers=[
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
