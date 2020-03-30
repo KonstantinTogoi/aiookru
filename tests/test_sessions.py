@@ -67,7 +67,7 @@ class TestTokenSession:
 
     @pytest.fixture
     def app(self):
-        return {'app_key': 123, 'app_secret_key': ''}
+        return {'app_id': None, 'app_key': 123, 'app_secret_key': ''}
 
     @pytest.fixture
     def token(self):

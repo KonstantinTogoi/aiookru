@@ -92,13 +92,16 @@ class TokenSession(PublicSession):
 
     ERROR_MSG = 'See calculating signature at https://apiok.ru/dev/methods/.'
 
-    __slots__ = ('app_key', 'app_secret_key', 'access_token',
-                 'session_secret_key', 'format')
+    __slots__ = (
+        'app_id', 'app_key', 'app_secret_key',
+        'access_token', 'session_secret_key', 'format'
+    )
 
-    def __init__(self, app_key, app_secret_key='', access_token='',
-                 session_secret_key='', format='json',
-                 pass_error=False, session=None):
+    def __init__(self, app_id, app_key, app_secret_key,
+                 access_token, session_secret_key,
+                 format='json', pass_error=False, session=None, **kwargs):
         super().__init__(pass_error, session)
+        self.app_id = app_id
         self.app_key = app_key
         self.app_secret_key = app_secret_key
         self.access_token = access_token
@@ -181,26 +184,36 @@ class TokenSession(PublicSession):
 
 
 class ClientSession(TokenSession):
-    """Session for executing requests in client applications."""
+    """Session for executing requests in client applications.
+
+    `TokenSession` without `app_secret_key` and `access_token` arguments.
+
+    """
 
     ERROR_MSG = 'Pass "session_secret_key" to use client-server circuit.'
 
-    def __init__(self, app_key, session_secret_key,
-                 format='json', pass_error=False, session=None):
-        super().__init__(app_key, '', '', session_secret_key,
-                         format=format, pass_error=pass_error, session=session)
+    def __init__(self, app_id, app_key, session_secret_key,
+                 format='json', pass_error=False, session=None, **kwargs):
+        super().__init__(app_id, app_key, '', '', session_secret_key,
+                         format, pass_error, session, **kwargs)
 
 
 class ServerSession(TokenSession):
-    """Session for executing requests in server applications."""
+    """Session for executing requests in server applications.
 
-    ERROR_MSG = 'Pass "app_secret_key" and "access_token" ' \
-                'to use server-server circuit.'
+    `TokenSession` without `session_secret_key` argument.
 
-    def __init__(self, app_key, app_secret_key, access_token,
-                 format='json', pass_error=False, session=None):
-        super().__init__(app_key, app_secret_key, access_token, '',
-                         format=format, pass_error=pass_error, session=session)
+    """
+
+    ERROR_MSG = (
+        'Pass "app_secret_key" and "access_token"'
+        'to use server-server circuit.'
+    )
+
+    def __init__(self, app_id, app_key, app_secret_key, access_token,
+                 format='json', pass_error=False, session=None, **kwargs):
+        super().__init__(app_id, app_key, app_secret_key, access_token, '',
+                         format, pass_error, session, **kwargs)
 
 
 class ImplicitSession(TokenSession):
@@ -230,15 +243,14 @@ class ImplicitSession(TokenSession):
     AUTHORIZE_NUM_ATTEMPTS = 1
     AUTHORIZE_RETRY_INTERVAL = 1
 
-    __slots__ = ('app_id', 'scope', 'redirect_uri', 'state',
-                 'expires_in', 'login', 'passwd', 'permissions_granted')
+    __slots__ = ('login', 'passwd', 'scope', 'redirect_uri', 'state',
+                 'expires_in', 'permissions_granted')
 
-    def __init__(self, app_id, app_key, app_secret_key, login, passwd,
-                 scope='', redirect_uri='', state='', format='json',
-                 pass_error=False, session=None):
-        super().__init__(app_key, app_secret_key, '', '',
-                         format=format, pass_error=pass_error, session=session)
-        self.app_id = app_id
+    def __init__(self, app_id, app_key, app_secret_key,
+                 login, passwd, scope='', redirect_uri='', state='',
+                 format='json', pass_error=False, session=None, **kwargs):
+        super().__init__(app_id, app_key, app_secret_key, '', '',
+                         format, pass_error, session, **kwargs)
         self.login = login
         self.passwd = passwd
         self.scope = scope
@@ -369,12 +381,12 @@ class ImplicitSession(TokenSession):
 class ImplicitClientSession(ImplicitSession):
     """`ImplicitSession` without `app_secret_key` argument."""
 
-    def __init__(self, app_id, app_key, login, passwd, scope='',
-                 redirect_uri='', state='', format='json',
-                 pass_error=False, session=None):
+    def __init__(self, app_id, app_key, login, passwd,
+                 scope='', redirect_uri='', state='',
+                 format='json', pass_error=False, session=None, **kwargs):
         super().__init__(app_id, app_key, '', login, passwd,
-                         scope, redirect_uri, state, format,
-                         pass_error, session)
+                         scope, redirect_uri, state,
+                         format, pass_error, session, **kwargs)
 
 
 class ImplicitServerSession(ImplicitSession):
@@ -394,10 +406,10 @@ class PasswordSession(TokenSession):
 
     __slots__ = ('login', 'passwd')
 
-    def __init__(self, app_key, app_secret_key, login, passwd,
-                 format='json', pass_error=False, session=None):
-        super().__init__(app_key, app_secret_key, '', '',
-                         format, pass_error, session)
+    def __init__(self, app_id, app_key, app_secret_key, login, passwd,
+                 format='json', pass_error=False, session=None, **kwargs):
+        super().__init__(app_id, app_key, app_secret_key, '', '',
+                         format, pass_error, session, **kwargs)
         self.login = login
         self.passwd = passwd
 
@@ -435,10 +447,10 @@ class PasswordSession(TokenSession):
 class PasswordClientSession(PasswordSession):
     """`PasswordSession` without `app_secret_key` argument."""
 
-    def __init__(self, app_key, login, passwd,
-                 format='json', pass_error=False, session=None):
-        super().__init__(app_key, '', login, passwd,
-                         format, pass_error, session)
+    def __init__(self, app_id, app_key, login, passwd,
+                 format='json', pass_error=False, session=None, **kwargs):
+        super().__init__(app_id, app_key, '', login, passwd,
+                         format, pass_error, session, **kwargs)
 
 
 class PasswordServerSession(PasswordSession):
