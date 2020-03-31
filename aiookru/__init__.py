@@ -1,4 +1,13 @@
 from . import exceptions, utils, parsers, sessions, api
+from .exceptions import (
+    Error,
+    OAuthError,
+    InvalidGrantError,
+    InvalidClientError,
+    InvalidUserError,
+    APIError,
+    EmptyResponseError,
+)
 from .sessions import (
     PublicSession,
     TokenSession,
@@ -18,3 +27,6 @@ from .sessions import (
     RefreshServerSession,
 )
 from .api import API
+
+
+__version__ = '0.0.1'
