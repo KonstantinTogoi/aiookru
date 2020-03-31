@@ -1,11 +1,4 @@
-from os.path import dirname, join
 from setuptools import find_packages, setup
-
-
-readme_path = join(dirname(__file__), 'README.md')
-
-with open(readme_path) as readme_file:
-    readme = readme_file.read()
 
 
 setup(
@@ -15,15 +8,14 @@ setup(
     author_email='konstantin.togoi@protonmail.com',
     url='https://github.com/KonstantinTogoi/aiookru',
     description='ok.ru Python REST API wrapper',
-    long_description=readme,
-    long_description_content_type='text/markdown',
+    long_description=open('README.rst').read(),
     license='BSD',
     packages=find_packages(),
     python_requires='>=3.5',
     install_requires=['aiohttp>=3.0.0', 'yarl'],
     setup_requires=['pytest-runner'],
     tests_require=['pytest-asyncio', 'pytest-localserver'],
-    keywords=['ok.ru api asyncio'],
+    keywords=['ok.ru rest api asyncio'],
     classifiers=[
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
