@@ -28,7 +28,7 @@ The main features are:
 Usage
 -----
 
-Tu use ok.ru API you need a registered app and `OK.ru <https://ok.ru>`_ account.
+To use ok.ru API you need a registered app and `OK.ru <https://ok.ru>`_ account.
 For more details, see
 `aiookru Documentation <https://aiookru.readthedocs.io/>`_.
 
@@ -52,7 +52,7 @@ i.e. when you embed your app's info (application key) in publicly available code
     events = await api.events.get()
     friends = await api.friends.get()
 
-Pass :code:`session_secret_key` that were received after authorization.
+Pass :code:`session_secret_key` that was received after authorization.
 For more details, see `aiookru Documentation <https://aiookru.readthedocs.io/>`_.
 
 Server application
