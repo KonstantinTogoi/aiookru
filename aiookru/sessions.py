@@ -216,6 +216,80 @@ class ServerSession(TokenSession):
                          format, pass_error, session, **kwargs)
 
 
+class CodeSession(TokenSession):
+    """Session with authorization with OAuth 2.0 (Authorization Code Grant).
+
+    The Authorization Code grant is used by confidential and public
+    clients to exchange an authorization code for an access token.
+
+    .. _OAuth 2.0 Authorization Code Grant
+        https://oauth.net/2/grant-types/authorization-code/
+
+    .. _Серверная OAuth авторизация
+        https://apiok.ru/ext/oauth/server
+
+    """
+
+    OAUTH_URL = 'https:/api.ok.ru/oauth/token.do'
+
+    __slots__ = (
+        'code', 'redirect_uri', 'refresh_token', 'token_type', 'expires_in'
+    )
+
+    def __init__(self, app_id, app_key, app_secret_key, code, redirect_uri,
+                 format='json', pass_error=False, session=None, **kwargs):
+        super().__init__(app_id, app_key, app_secret_key, '', '',
+                         format, pass_error, session, **kwargs)
+        self.code = code
+        self.redirect_uri = redirect_uri
+
+    @property
+    def params(self):
+        """Authorization request's parameters."""
+        return {
+            'code': self.code,
+            'client_id': self.app_id,
+            'client_secret': self.secret_key,
+            'redirect_uri': self.redirect_uri,
+            'grant_type': 'authorization_code',
+        }
+
+    async def authorize(self):
+        """Authorize with OAuth 2.0 (Authorization Code)."""
+
+        async with self.session.post(self.OAUTH_URL, data=self.params) as resp:
+            content = await resp.json(content_type=self.CONTENT_TYPE)
+
+        if 'error' in content:
+            log.error(content)
+            raise OAuthError(content)
+        elif content:
+            try:
+                self.access_token = content['access_token']
+                self.token_type = content.get('token_type')
+                self.refresh_token = content['refresh_token']
+                self.expires_in = content.get('expires_in')
+            except KeyError as e:
+                raise OAuthError(str(e.args[0]) + ' is missing in the response')
+        else:
+            raise OAuthError('got empty authorization response')
+
+        return self
+
+
+class CodeClientSession(CodeSession):
+    """`CodeSession` without `app_secret_key` argument."""
+
+    def __init__(self, app_id, app_key, code, redirect_uri,
+                 format='json', pass_error=False, session=None, **kwargs):
+        super().__init__(app_id, app_key, '', code, redirect_uri,
+                         format, pass_error, session, **kwargs)
+
+
+class CodeServerSession(CodeSession):
+    """The same as `CodeSession`."""
+
+
 class ImplicitSession(TokenSession):
     """Session with authorization with OAuth 2.0 (Implicit Grant).
 
