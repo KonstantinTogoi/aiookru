@@ -332,6 +332,7 @@ class ImplicitSession(TokenSession):
 
         async with self.session.post(form_url, data=form_data) as resp:
             if resp.status != 200:
+                # TODO: parse error in URL
                 log.error(self.POST_AUTH_DIALOG_ERROR_MSG)
                 raise OAuthError(self.POST_AUTH_DIALOG_ERROR_MSG)
             else:
@@ -455,3 +456,72 @@ class PasswordClientSession(PasswordSession):
 
 class PasswordServerSession(PasswordSession):
     """The same as `PasswordSession`."""
+
+
+class RefreshSession(TokenSession):
+    """Session with authorization with OAuth 2.0 (Refresh Token).
+
+    The Refresh Token grant type is used by clients to exchange
+    a refresh token for an access token when the access token has expired.
+
+    .. _OAuth 2.0 Refresh Token
+        https://oauth.net/2/grant-types/refresh-token/
+
+    .. _Использование refresh_token
+        https://apiok.ru/ext/oauth/server
+
+    """
+
+    OAUTH_URL = 'https://api.ok.ru/oauth/token.do'
+
+    __slots__ = ('refresh_token', 'token_type', 'expires_in')
+
+    def __init__(self, app_id, app_key, app_secret_key, refresh_token,
+                 format='json', pass_error=False, session=None, **kwargs):
+        super().__init__(app_id, app_key, app_secret_key, '', '',
+                         format, pass_error, session, **kwargs)
+        self.refresh_token = refresh_token
+
+    @property
+    def params(self):
+        """Authorization request's parameters."""
+        return {
+            'refresh_token': self.refresh_token,
+            'client_id': self.app_id,
+            'client_secret': self.secret_key,
+            'grant_type': 'refresh_token',
+        }
+
+    async def authorize(self):
+        """Authorize with OAuth 2.0 (Refresh Token)."""
+
+        async with self.session.post(self.OAUTH_URL, data=self.params) as resp:
+            content = await resp.json(content_type=self.CONTENT_TYPE)
+
+        if 'error' in content:
+            log.error(content)
+            raise OAuthError(content)
+        elif content:
+            try:
+                self.access_token = content['access_token']
+                self.token_type = content.get('token_type')
+                self.expires_in = content.get('expires_in')
+            except KeyError as e:
+                raise OAuthError(str(e.args[0]) + ' is missing in the response')
+        else:
+            raise OAuthError('got empty authorization response')
+
+        return self
+
+
+class RefreshClientSession(RefreshSession):
+    """`RefreshSession` without `app_secret_key` argument."""
+
+    def __init__(self, app_id, app_key, refresh_token,
+                 format='json', pass_error=False, session=None, **kwargs):
+        super().__init__(app_id, app_key, '', refresh_token,
+                         format, pass_error, session, **kwargs)
+
+
+class RefreshServerSession(RefreshSession):
+    """The same as `RefreshSession`."""
