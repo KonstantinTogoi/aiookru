@@ -63,9 +63,7 @@ class InvalidUserError(CustomOAuthError):
 class APIError(Error):
     """API error."""
 
-    __slots__ = ('code', 'data', 'msg')
-
-    def __init__(self, error):
+    def __init__(self, error: dict):
         super().__init__(error)
         self.code = error.get('error_code')
         self.data = error.get('error_data')
@@ -87,4 +85,6 @@ class CustomAPIError(APIError):
 
 
 class EmptyResponseError(CustomAPIError):
+    """Empty API response."""
+
     ERROR = {'error_code': -1, 'error_data': {}, 'error_msg': 'empty response'}
