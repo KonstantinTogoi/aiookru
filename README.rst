@@ -7,7 +7,7 @@
 .. image:: https://img.shields.io/pypi/pyversions/aiookru.svg
     :target: https://pypi.python.org/pypi/aiookru
 
-.. image:: https://img.shields.io/badge/docs-latest-brightgreen.svg
+.. image:: https://readthedocs.org/projects/aiookru/badge/?version=latest
     :target: https://aiookru.readthedocs.io/en/latest/
 
 .. image:: https://travis-ci.org/KonstantinTogoi/aiookru.svg
