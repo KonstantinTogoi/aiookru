@@ -23,7 +23,7 @@ Account
 
 To create an app you need to:
 
-1. Sign up in `OK.Ru <https://ok.ru>`_ and link an email to your account to receive emails with app data.
+1. Sign up in `ok.Ru <https://ok.ru>`_ and link an email to your account to receive emails with app data.
 2. Obtain developer rights at https://ok.ru/devaccess.
 
 After obtaining developer rights you will get a link

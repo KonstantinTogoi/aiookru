@@ -1,11 +1,12 @@
 Authorization
 =============
 
-To authorize with OK.ru OAuth 2.0 you need :code:`app_id` or :code:`app_key`.
+To authorize with ok.ru OAuth 2.0 you need :code:`app_id` or :code:`app_key`.
 And you need either :code:`session_secret_key` or :code:`app_secret_key`
 and :code:`access_token` for executing API requests after authorization.
 
-After authorization you will receive:
+The preferred way to authorize is an :code:`async with` statement.
+After authorization the session will have the following attributes:
 
 * :code:`access_token` aka :code:`session_key`, always
 * :code:`session_secret_key` if Implicit Grant / Password Grant used
