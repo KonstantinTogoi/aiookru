@@ -4,7 +4,7 @@
 
 .. toctree::
    :maxdepth: 2
-   :caption: Manual:
+   :caption: Contents:
 
    getting_started
    authorization
@@ -16,4 +16,3 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
