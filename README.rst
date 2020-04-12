@@ -38,8 +38,8 @@ Client application
 
 Use :code:`ClientSession` when REST API is needed in:
 
-- a client component of the client-server application
-- a standalone mobile/desktop application
+- client component of the client-server application
+- standalone mobile/desktop application
 
 i.e. when you embed your app's info (application key) in publicly available code.
 
@@ -47,21 +47,23 @@ i.e. when you embed your app's info (application key) in publicly available code
 
     from aiookru import ClientSession, API
 
-    session = ClientSession(app_id, app_key, session_secret_key)
+    session = ClientSession(app_id, app_key, access_token, session_secret_key)
     api = API(session)
 
     events = await api.events.get()
     friends = await api.friends.get()
 
-Pass :code:`session_secret_key` that was received after authorization.
-For more details, see `aiookru Documentation <https://aiookru.readthedocs.io/>`_.
+Pass :code:`session_secret_key` and :code:`access_token`
+that were received after authorization.
+For more details, see
+`authorization instruction <https://aiookru.readthedocs.io/en/latest/authorization.html>`_.
 
 Server application
 ~~~~~~~~~~~~~~~~~~
 
 Use :code:`ServerSession` when REST API is needed in:
 
-- a server component of the client-server application
+- server component of the client-server application
 - requests from your servers
 
 .. code-block:: python
@@ -74,9 +76,9 @@ Use :code:`ServerSession` when REST API is needed in:
     events = await api.events.get()
     friends = await api.friends.get()
 
-Pass :code:`access_token` that was received after authorization.
+Pass :code:`app_secret_key` and :code:`access_token` that was received after authorization.
 For more details, see
-`aiookru Documentation <https://aiookru.readthedocs.io/>`_.
+`authorization instruction <https://aiookru.readthedocs.io/en/latest/authorization.html>`_.
 
 Installation
 ------------
