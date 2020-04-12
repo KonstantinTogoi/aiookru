@@ -6,6 +6,9 @@ List of all methods is available here: https://apiok.ru/en/dev/methods/rest/.
 Executing requests
 ------------------
 
+For executing API requests call an instance of :code:`APIMethod` class.
+You can get it as an attribute of :code:`API` class instance or other :code:`APIMethod` class instance.
+
 .. code-block:: python
 
     from aiookru import API
@@ -19,10 +22,10 @@ Under the hood each API request is enriched
 with parameters (https://apiok.ru/en/dev/methods/):
 
 * :code:`application_key`
-* :code:`app_secret_key` and :code:`access_token` or :code:`session_secret_key`
 * :code:`format`
 * :code:`method`
 * :code:`sig`
+* :code:`access_token`
 
 to authorize request.
 
