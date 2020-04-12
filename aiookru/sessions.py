@@ -283,15 +283,6 @@ class CodeSession(TokenSession):
         return self
 
 
-class CodeClientSession(CodeSession):
-    """`CodeSession` without `app_secret_key` argument."""
-
-    def __init__(self, app_id, app_key, code, redirect_uri,
-                 format='json', pass_error=False, session=None, **kwargs):
-        super().__init__(app_id, app_key, '', code, redirect_uri,
-                         format, pass_error, session, **kwargs)
-
-
 class CodeServerSession(CodeSession):
     """The same as `CodeSession`."""
 
@@ -470,10 +461,6 @@ class ImplicitClientSession(ImplicitSession):
                          format, pass_error, session, **kwargs)
 
 
-class ImplicitServerSession(ImplicitSession):
-    """The same as `ImplicitSession`."""
-
-
 class PasswordSession(TokenSession):
     """Session with authorization with OAuth 2.0 (Password Grant).
 
@@ -534,10 +521,6 @@ class PasswordClientSession(PasswordSession):
                          format, pass_error, session, **kwargs)
 
 
-class PasswordServerSession(PasswordSession):
-    """The same as `PasswordSession`."""
-
-
 class RefreshSession(TokenSession):
     """Session with authorization with OAuth 2.0 (Refresh Token).
 
@@ -592,15 +575,6 @@ class RefreshSession(TokenSession):
             raise OAuthError('got empty authorization response')
 
         return self
-
-
-class RefreshClientSession(RefreshSession):
-    """`RefreshSession` without `app_secret_key` argument."""
-
-    def __init__(self, app_id, app_key, refresh_token,
-                 format='json', pass_error=False, session=None, **kwargs):
-        super().__init__(app_id, app_key, '', refresh_token,
-                         format, pass_error, session, **kwargs)
 
 
 class RefreshServerSession(RefreshSession):
