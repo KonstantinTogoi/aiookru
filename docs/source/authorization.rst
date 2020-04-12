@@ -25,7 +25,7 @@ Authorization Code Grant
 
     app_id = 123456
     app_key = 'abcde'
-    app_secret_key = ''
+    app_secret_key = 'xyz'
 
     async with CodeSession(app_id, app_key, app_secret_key, code, redirect_uri) as session:
         api = API(session)
@@ -44,7 +44,7 @@ Implicit Grant
 
     app_id = 123456
     app_key = 'abcde'
-    app_secret_key = 'xyz'
+    app_secret_key = ''
 
     async with ImplicitSession(app_id, app_key, app_secret_key, login, passwd, scope) as session:
         api = API(session)
@@ -63,7 +63,7 @@ Password Grant
 
     app_id = 123456
     app_key = 'abcde'
-    app_secret_key = 'xyz'
+    app_secret_key = ''
 
     async with PasswordSession(app_id, app_key, app_secret_key, login, passwd) as session:
         api = API(session)
@@ -80,7 +80,7 @@ Refresh Token
 
     app_id = 123456
     app_key = 'abcde'
-    app_secret_key = ''
+    app_secret_key = 'xyz'
 
     async with RefreshSession(app_id, app_key, app_secret_key, refresh_token) as session:
         api = API(session)
