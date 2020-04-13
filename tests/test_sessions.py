@@ -71,17 +71,23 @@ class TestTokenSession:
 
     @pytest.fixture
     def token(self):
-        return {'access_token': '', 'session_secret_key': ''}
+        return {'access_token': 'token', 'session_secret_key': ''}
 
     @pytest.mark.asyncio
-    async def test_sig_circuit(self, app, token):
+    async def test_undefined_sig_circuit(self, app, token):
         async with TokenSession(**app, **token) as session:
             assert session.sig_circuit is SignatureCircuit.UNDEFINED
 
+    @pytest.mark.asyncio
+    async def test_client_sig_circuit(self, app, token):
+        async with TokenSession(**app, **token) as session:
             session.session_secret_key = 'session key'
             assert session.sig_circuit is SignatureCircuit.CLIENT_SERVER
 
-            session.access_token = 'token'
+    @pytest.mark.asyncio
+    async def test_server_sig_circuit(self, app, token):
+        async with TokenSession(**app, **token) as session:
+            assert session.sig_circuit is SignatureCircuit.UNDEFINED
             session.app_secret_key = 'app key'
             assert session.sig_circuit is SignatureCircuit.SERVER_SERVER
 
