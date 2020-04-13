@@ -61,9 +61,8 @@ ClientSession
 ^^^^^^^^^^^^^
 
 :code:`ClientSession` is a subclass of :code:`TokenSession`.
-Use it as a client session without authorization
-(pass :code:`session_secret_key` and :code:`access_token`)
-that were already received.
+Use it as a client session without authorization.
+Use :code:`session_secret_key` and :code:`access_token` that were already received.
 
 .. code-block:: python
 
@@ -146,9 +145,8 @@ ServerSession
 ^^^^^^^^^^^^^
 
 :code:`ServerSession` is a subclass of :code:`TokenSession`.
-Use it as a server session without authorization
-(pass :code:`app_secret_key` and :code:`access_token`)
-that were already received.
+Use it as a server session without authorization.
+Use your :code:`app_secret_key` and :code:`access_token` that was already received.
 
 .. code-block:: python
 
@@ -202,7 +200,7 @@ Error
 
 In case of an error, by default, exception is raised.
 You can pass :code:`pass_error` parameter to :code:`TokenSession`
-for returning original error's body as :code:`dict`.
+for returning original error's body as :code:`dict`:
 
 .. code-block:: python
 
@@ -211,3 +209,5 @@ for returning original error's body as :code:`dict`.
         "error_data": 1,
         "error_msg": "PARAM : Either session_key or uid must be specified"
     }
+
+All error codes are available here: https://apiok.ru/en/dev/errors.
