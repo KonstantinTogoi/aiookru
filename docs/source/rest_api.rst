@@ -7,7 +7,8 @@ Executing requests
 ------------------
 
 For executing API requests call an instance of :code:`APIMethod` class.
-You can get it as an attribute of :code:`API` class instance or other :code:`APIMethod` class instance.
+You can get it as an attribute of :code:`API` class instance or
+as an attribute of other :code:`APIMethod` class instance.
 
 .. code-block:: python
 
@@ -18,16 +19,16 @@ You can get it as an attribute of :code:`API` class instance or other :code:`API
     events = await api.events.get()  # events for current user
     friends = await api.friends.get()  # current user's friends
 
-Under the hood each API request is enriched
-with parameters (https://apiok.ru/en/dev/methods/):
+Under the hood each API request is enriched with parameters to generate signature:
 
 * :code:`application_key`
 * :code:`format`
 * :code:`method`
+
+and with the following parameters after generating signature:
+
 * :code:`sig`
 * :code:`access_token`
-
-to authorize request.
 
 Methods
 -------
